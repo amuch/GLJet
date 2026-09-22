@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">GLJet</string>
+    <string name="description">"This app plays audio"</string>
+    <string name="empty">""</string>
+</resources>
