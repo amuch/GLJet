@@ -96,11 +96,11 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
 //            cube.initGL()
 //        }
         var z = -30.0
-        val incFactor = -16.0
+        val incFactor = -13.0
         for(i in 1 until MAX_VORTEX_COUNT) {
             val x = Random.nextDouble(X_MIN_VORTEX, X_MAX_VORTEX).toFloat()
             val y = Random.nextDouble(Y_MIN_VORTEX, Y_MAX_VORTEX).toFloat()
-            val zed = Random.nextDouble(z + incFactor / 2, incFactor).toFloat()
+            val zed = (i * incFactor).toFloat()
             val position = floatArrayOf(x, y, zed)
             val vortex = Vortex(context, position)
             vortices.add(vortex)
