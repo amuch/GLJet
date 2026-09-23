@@ -109,20 +109,13 @@ class Jet(val context: Context) {
                     easeYRotation()
                 }
 
-                JetMovement.RESET -> {
-//                    model.position = positionInitial
-//                    println("${model.position[X]}, ${model.position[Y]}, ${model.position[Z]}")
-//                    movement = JetMovement.NONE
-//                    println("Reset")
-                }
-
                 else -> {
                     easeIntoIdle()
                 }
             }
 
-            val z = position[Z] - speed
-            position[Z] = z
+//            val z = position[Z] - speed
+//            position[Z] = z
         }
     }
 

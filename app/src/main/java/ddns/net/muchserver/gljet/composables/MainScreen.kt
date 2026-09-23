@@ -159,7 +159,7 @@ fun MainScreen(
                 text = "J",
                 onInteraction = { interaction ->
                     when (interaction) {
-                        is PressInteraction.Press -> glView?.resetPositionJet()
+                        is PressInteraction.Press -> glView?.reset()
                     }
                 }
             )

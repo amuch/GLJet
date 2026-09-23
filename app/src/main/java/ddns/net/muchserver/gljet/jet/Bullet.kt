@@ -9,7 +9,9 @@ import ddns.net.muchserver.gljet.utility.Z
 import ddns.net.muchserver.gljet.utility.loadRawResourceText
 
 const val BULLET_MAX_UPDATE_COUNT = 301
+const val BULLET_MIN_Z = -105
 class Bullet(val context: Context, val position: FloatArray, val direction: FloatArray) {
+    val speed = 0.5f
     val rotation = floatArrayOf(-90f, 0f, 0f)
     val vertex = loadRawResourceText(context, R.raw.shader_vertex_model)
     val fragment = loadRawResourceText(context, R.raw.shader_fragment_model)
@@ -17,7 +19,7 @@ class Bullet(val context: Context, val position: FloatArray, val direction: Floa
     val model = Model(context, R.raw.bullet_obj, position, rotation,vertex, fragment, scale)
     val scaleCollider = floatArrayOf(0.4f, 0.4f, 0.8f)
     val collider = Collider(context, position, ID_JET, scaleCollider, ColliderType.BOX)
-    var updateCount = 0
+
     var isActive = false
 
     fun initGL() {
@@ -26,13 +28,11 @@ class Bullet(val context: Context, val position: FloatArray, val direction: Floa
 
     fun update() {
         if(isActive) {
-            updateCount++
-            val z = position[Z] - speed * 10f
+            val z = position[Z] - speed
             position[Z] = z
-            if(updateCount > BULLET_MAX_UPDATE_COUNT) {
+            if(position[Z] < BULLET_MIN_Z) {
                 isActive = false
-                updateCount = 0
-                println("update count expired")
+//                println("Bullet Reset")
             }
         }
     }

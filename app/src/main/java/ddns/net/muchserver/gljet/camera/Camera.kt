@@ -25,7 +25,7 @@ const val Y_OFFSET_FOLLOW_REAR = 2.5f
 open class Camera(
     private val fieldOfViewY: Float = FIELD_OF_VIEW_DEFAULT,
     private val near: Float = 1f,
-    private val far: Float = 150f
+    private val far: Float = 100f
 ) {
     val matrixProjection = FloatArray(MAT4_SIZE)
     val matrixView = FloatArray(MAT4_SIZE)

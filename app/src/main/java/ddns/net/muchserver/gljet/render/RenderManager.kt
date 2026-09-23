@@ -117,10 +117,8 @@ class RenderManager(val context: Context, val gameLoop: GameLoop): GLSurfaceView
         scene.setFollowTop()
     }
 
-    fun resetPositionJet() {
-        scene.resetPositionJet()
-//        scene.enableCubes()
-        scene.enableVortices()
+    fun reset() {
+        scene.reset()
     }
 
     fun toggleColliderRender() {

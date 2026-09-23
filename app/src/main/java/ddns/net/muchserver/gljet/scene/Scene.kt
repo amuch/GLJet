@@ -17,6 +17,7 @@ import ddns.net.muchserver.gljet.jet.Jet
 import ddns.net.muchserver.gljet.jet.speed
 import ddns.net.muchserver.gljet.obstacle.Vortex
 import ddns.net.muchserver.gljet.render.GLRenderer
+import ddns.net.muchserver.gljet.sound.Sound
 import ddns.net.muchserver.gljet.time.GameLoop
 import ddns.net.muchserver.gljet.utility.X
 import ddns.net.muchserver.gljet.utility.Y
@@ -56,28 +57,21 @@ val positionsCube = arrayOf(
     floatArrayOf(4f, -4f, -134f),
 )
 
-const val MAX_VORTEX_COUNT = 42
-const val X_MIN_VORTEX = -4.0
-const val X_MAX_VORTEX = 4.0
-const val Y_MIN_VORTEX = -6.0
-const val Y_MAX_VORTEX = 6.0
+const val MAX_VORTEX_COUNT = 9
+
 
 const val BULLET_MAX_COUNT = 9
+const val Z_MAX_SCENE = 5
+const val Z_SPAWN = -60f
 class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
     var score = 0
-
-    val shoot = MediaPlayer.create(context, R.raw.shoot)
-    val explosion = MediaPlayer.create(context, R.raw.explosion)
-    val collision = MediaPlayer.create(context, R.raw.collision)
+    val sound = Sound(context)
     val camera = Camera()
     lateinit var jet: Jet
     lateinit var skyBox: SkyBox
-//    val cubes = ArrayList<Cube>()
     val vortices = ArrayList<Vortex>()
     val bullets = ArrayList<Bullet>()
-
-    val vertex = loadRawResourceText(context, R.raw.shader_vertex_cube)
-    val fragment = loadRawResourceText(context, R.raw.shader_fragment_cube)
+    var isFiring = false
 
 
     override fun initGL() {
@@ -87,103 +81,34 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
         skyBox = SkyBox(context)
         skyBox.initGL()
 
-//        for(position in positionsCube) {
-//            val cube = Cube(context, position, vertex, fragment)
-//            cubes.add(cube)
+        vorticesInit()
 
-//        }
-//        for(cube in cubes) {
-//            cube.initGL()
-//        }
-        var z = -30.0
-        val incFactor = -13.0
-        for(i in 1 until MAX_VORTEX_COUNT) {
-            val x = Random.nextDouble(X_MIN_VORTEX, X_MAX_VORTEX).toFloat()
-            val y = Random.nextDouble(Y_MIN_VORTEX, Y_MAX_VORTEX).toFloat()
-            val zed = (i * incFactor).toFloat()
-            val position = floatArrayOf(x, y, zed)
-            val vortex = Vortex(context, position)
-            vortices.add(vortex)
-            z += incFactor
-        }
-        for(vortex in vortices) {
-            vortex.initGL()
-        }
-        for(i in 0 until BULLET_MAX_COUNT) {
-            val position = floatArrayOf(0f, 0f, 0f)
-            val direction = floatArrayOf(0f, 0f, 1f)
-            val bullet = Bullet(context, position, direction)
+        bulletsInit()
 
-            bullets.add(bullet)
-        }
         setFollowRear()
     }
 
     override fun update() {
-//        CoroutineScope(Dispatchers.Default).launch {
             camera.position[Z] = camera.position[Z] - speed
             camera.updateViewMatrix()
 
             camera.update()
             jet.update()
 
-            for (bullet in bullets) {
+            for(bullet in bullets) {
                 bullet.update()
             }
+
             for(vortex in vortices) {
-                if(!vortex.isActive) {
-                    continue
-                }
-                for (bullet in bullets) {
-                    if (!bullet.isActive) {
-                        continue
-                    }
-                    if (CollisionManager.isCollision(bullet.collider, vortex.collider)) {
-                        playExplosion()
-                        score += 3
-                        bullet.isActive = false
-                        vortex.isActive = false
-                        break
-                    }
-                }
-                if (CollisionManager.isCollision(jet.collider, vortex.collider)) {
-                    playCollision()
-                    score -= 4
-                    vortex.isActive = false
-                }
                 vortex.update()
+                resolveBulletsVortexCollision(vortex)
+                resolveJetVortexCollision(vortex)
             }
-//            for (cube in cubes) {
-//                if(!cube.isActive) {
-//                    continue
-//                }
-//                for (bullet in bullets) {
-//                    if (!bullet.isActive) {
-//                        continue
-//                    }
-//                    if (CollisionManager.isCollision(bullet.collider, cube.collider)) {
-//                        playExplosion()
-//                        score += 3
-//                        bullet.isActive = false
-//                        cube.isActive = false
-//                        break
-//                    }
-//                }
-//                if (CollisionManager.isCollision(jet.collider, cube.collider)) {
-//                    playCollision()
-//                    score -= 4
-//                    cube.isActive = false
-//                }
-//                cube.update()
-//            }
-//        }
     }
 
     override fun draw(matrixView: FloatArray, matrixProjection: FloatArray) {
         skyBox.draw(matrixView, matrixProjection)
-//        for(cube in cubes) {
-//            cube.draw(matrixView, matrixProjection)
-//        }
+
         for(vortex in vortices) {
             vortex.draw(matrixView, matrixProjection)
         }
@@ -236,36 +161,62 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
         camera.setFollowTop(jet.position)
     }
 
-    fun resetPositionJet() {
+    fun reset() {
         if(jet.isUpdating) {
             jet.isUpdating = false
             jet.resetPosition()
             diableBullets()
+            enableVortices()
+            randomizeVorticesPosition()
             score = 0
         }
         else {
             jet.isUpdating = true
         }
     }
-//    fun enableCubes() {
-//        for(cube in cubes) {
-//            cube.isActive = true
-//        }
-//    }
+
+    fun vorticesInit() {
+        for(i in 0 until MAX_VORTEX_COUNT) {
+            val position = floatArrayOf(0f, 0f, 0f)
+            val vortex = Vortex(context, position)
+            vortices.add(vortex)
+            vortex.initGL()
+        }
+        randomizeVorticesPosition()
+    }
+
     fun enableVortices() {
         for(vortex in vortices) {
             vortex.isActive = true
         }
     }
 
+    fun randomizeVorticesPosition() {
+        val incFactor = -7.0f
+        for(i in 0 until MAX_VORTEX_COUNT) {
+            vortices[i].position[X] = Vortex.randomizeX()
+            vortices[i].position[Y] = Vortex.randomizeY()
+            vortices[i].position[Z] = Z_SPAWN + (i * incFactor)
+        }
+    }
+
+    fun bulletsInit() {
+        for(i in 0 until BULLET_MAX_COUNT) {
+            val position = floatArrayOf(0f, 0f, 0f)
+            val direction = floatArrayOf(0f, 0f, 1f)
+            val bullet = Bullet(context, position, direction)
+            bullet.initGL()
+            bullets.add(bullet)
+        }
+    }
     fun fire() {
         for(bullet in bullets) {
             if(!bullet.isActive) {
                 bullet.position[X] = jet.position[X]
                 bullet.position[Y] = jet.position[Y]
-                bullet.position[Z] = jet.position[Z] - 5f
+                bullet.position[Z] = jet.position[Z] - 3f
                 bullet.isActive = true
-                playShoot()
+                sound.playShoot()
                 break
             }
         }
@@ -277,30 +228,35 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
         }
     }
 
-    fun playShoot() {
+    fun resolveJetVortexCollision(vortex: Vortex) {
         CoroutineScope(Dispatchers.Default).launch {
-            if(shoot.isPlaying) {
+            if(!vortex.isActive) {
                 return@launch
             }
-            shoot.start()
+            if(CollisionManager.isCollision(jet.collider, vortex.collider)) {
+                sound.playCollision()
+                score -= 4
+                vortex.isActive = false
+            }
         }
     }
 
-    fun playExplosion() {
+    fun resolveBulletsVortexCollision(vortex: Vortex) {
         CoroutineScope(Dispatchers.Default).launch {
-            if(explosion.isPlaying) {
-                return@launch
+            for(bullet in bullets) {
+                if(!bullet.isActive) {
+                    continue
+                }
+                if(vortex.isActive) {
+                    if(CollisionManager.isCollision(bullet.collider, vortex.collider)) {
+                        sound.playExplosion()
+                        score += 3
+                        bullet.isActive = false
+                        vortex.isActive = false
+                        break
+                    }
+                }
             }
-            explosion.start()
-        }
-    }
-
-    fun playCollision() {
-        CoroutineScope(Dispatchers.Default).launch {
-            if(collision.isPlaying) {
-                return@launch
-            }
-            collision.start()
         }
     }
 }

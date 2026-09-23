@@ -77,8 +77,8 @@ class GameSurfaceView(context: Context): GLSurfaceView(context) {
         renderManager.setFollowTop()
     }
 
-    fun resetPositionJet() {
-        renderManager.resetPositionJet()
+    fun reset() {
+        renderManager.reset()
     }
 
     fun toggleColliderRender() {
