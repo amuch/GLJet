@@ -32,7 +32,7 @@ class Bullet(val context: Context, val position: FloatArray, val direction: Floa
             position[Z] = z
             if(position[Z] < BULLET_MIN_Z) {
                 isActive = false
-//                println("Bullet Reset")
+                println("Bullet Reset")
             }
         }
     }

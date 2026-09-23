@@ -86,6 +86,14 @@ class RenderManager(val context: Context, val gameLoop: GameLoop): GLSurfaceView
         scene.fire()
     }
 
+    fun setFiring() {
+        scene.startFiring()
+    }
+
+    fun unsetFiring() {
+        scene.isFiringBullets = false
+    }
+
     fun positionText(): String {
         if(!scene.jet.model.isInitialized) {
             return ""

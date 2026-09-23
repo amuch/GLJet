@@ -178,7 +178,9 @@ fun MainScreen(
                 text = "F",
                 onInteraction = { interaction ->
                     when (interaction) {
-                        is PressInteraction.Press -> glView?.fire()
+                        is PressInteraction.Press -> glView?.setFiring()
+                        is PressInteraction.Release -> glView?.unsetFiring()
+                        is PressInteraction.Cancel -> glView?.unsetFiring()
                     }
                 }
             )

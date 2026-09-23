@@ -50,6 +50,14 @@ class GameSurfaceView(context: Context): GLSurfaceView(context) {
         renderManager.fire()
     }
 
+    fun setFiring() {
+        renderManager.setFiring()
+    }
+
+    fun unsetFiring() {
+        renderManager.unsetFiring()
+    }
+
     fun setIdle() {
         renderManager.setIdle()
     }

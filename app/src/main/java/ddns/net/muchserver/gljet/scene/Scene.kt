@@ -25,9 +25,11 @@ import ddns.net.muchserver.gljet.utility.Z
 import ddns.net.muchserver.gljet.utility.loadRawResourceText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.collections.get
 import kotlin.random.Random
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid.Companion.random
 
 val positionsCube = arrayOf(
@@ -60,7 +62,7 @@ val positionsCube = arrayOf(
 const val MAX_VORTEX_COUNT = 9
 
 
-const val BULLET_MAX_COUNT = 9
+const val BULLET_MAX_COUNT = 13
 const val Z_MAX_SCENE = 5
 const val Z_SPAWN = -60f
 class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
@@ -71,7 +73,7 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
     lateinit var skyBox: SkyBox
     val vortices = ArrayList<Vortex>()
     val bullets = ArrayList<Bullet>()
-    var isFiring = false
+    var isFiringBullets = false
 
 
     override fun initGL() {
@@ -225,6 +227,23 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
     fun diableBullets() {
         for(bullet in bullets) {
             bullet.isActive = false
+        }
+    }
+
+    fun startFiring() {
+        if(isFiringBullets) {
+            return
+        }
+        isFiringBullets = true
+        resolveIsFiringBullets()
+    }
+
+    fun resolveIsFiringBullets() {
+        CoroutineScope(Dispatchers.Default).launch {
+            while(isFiringBullets) {
+                fire()
+                delay(150.milliseconds)
+            }
         }
     }
 
