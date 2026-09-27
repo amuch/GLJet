@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -39,6 +41,7 @@ fun MainScreen(
 //    val positionTextState = remember { mutableStateOf("X: 0.0, Y: 0.0 Z: 0.0") }
 //    val colliderTextState = remember { mutableStateOf("X: 0.0, Y: 0.0 Z: 0.0") }
     val scoreTextState = remember { mutableStateOf("") }
+    val accuracyTextState = remember{ mutableStateOf("") }
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
 
@@ -61,11 +64,20 @@ fun MainScreen(
                 if(score != null) {
                     scoreTextState.value = score
                 }
+                val accuracy = glView?.accuracyText()
+                if(accuracy != null) {
+                    accuracyTextState.value = accuracy
+                }
             }
         }
         Text(
             text = scoreTextState.value,
             modifier = Modifier.align(Alignment.TopStart).padding(15.dp).background(Color.White),
+            fontSize = 20.sp
+        )
+        Text(
+            text = accuracyTextState.value,
+            modifier = Modifier.align(Alignment.TopStart).offset(y = 25.dp).padding(15.dp).background(Color.White),
             fontSize = 20.sp
         )
 
@@ -174,7 +186,7 @@ fun MainScreen(
         ) {
 
             ButtonOverlay(
-                modifier = Modifier.padding(5.dp),
+                modifier = Modifier.padding(5.dp).height(80.dp).width(80.dp),
                 text = "F",
                 onInteraction = { interaction ->
                     when (interaction) {

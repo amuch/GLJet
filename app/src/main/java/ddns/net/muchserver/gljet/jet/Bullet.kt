@@ -5,11 +5,15 @@ import ddns.net.muchserver.gljet.R
 import ddns.net.muchserver.gljet.collider.Collider
 import ddns.net.muchserver.gljet.collider.ColliderType
 import ddns.net.muchserver.gljet.model.Model
+import ddns.net.muchserver.gljet.scene.Scene
+import ddns.net.muchserver.gljet.utility.X
+import ddns.net.muchserver.gljet.utility.Y
 import ddns.net.muchserver.gljet.utility.Z
 import ddns.net.muchserver.gljet.utility.loadRawResourceText
 
-const val BULLET_MAX_UPDATE_COUNT = 301
-const val BULLET_MIN_Z = -105
+const val X_POSITION_INITIAL_BULLET = 0f
+const val Y_POSITION_INITIAL_BULLET = 0f
+const val Z_POSITION_INITIAL_BULLET = -2f
 class Bullet(val context: Context, val position: FloatArray, val direction: FloatArray) {
     val speed = 0.5f
     val rotation = floatArrayOf(-90f, 0f, 0f)
@@ -30,10 +34,6 @@ class Bullet(val context: Context, val position: FloatArray, val direction: Floa
         if(isActive) {
             val z = position[Z] - speed
             position[Z] = z
-            if(position[Z] < BULLET_MIN_Z) {
-                isActive = false
-                println("Bullet Reset")
-            }
         }
     }
 
@@ -42,5 +42,13 @@ class Bullet(val context: Context, val position: FloatArray, val direction: Floa
             model.draw(matrixView, matrixProjection)
             collider.draw(matrixView, matrixProjection)
         }
+    }
+
+    fun reset() {
+        position[X] = X_POSITION_INITIAL_BULLET
+        position[Y] = Y_POSITION_INITIAL_BULLET
+        position[Z] = Z_POSITION_INITIAL_BULLET
+        isActive = false
+        println("Bullet Reset")
     }
 }

@@ -65,6 +65,11 @@ class GameSurfaceView(context: Context): GLSurfaceView(context) {
     fun scoreText(): String {
         return renderManager.scoreText()
     }
+
+    fun accuracyText(): String {
+        return renderManager.accuracyText()
+    }
+
     fun positionText(): String {
         return renderManager.positionText()
     }

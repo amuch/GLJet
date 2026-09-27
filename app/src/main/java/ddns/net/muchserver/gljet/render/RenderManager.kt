@@ -105,6 +105,11 @@ class RenderManager(val context: Context, val gameLoop: GameLoop): GLSurfaceView
         return "Score ${scene.score}"
     }
 
+    fun accuracyText(): String {
+        val accuracy = scene.accuracy()
+        return "Hit: ${scene.hits} Miss: ${scene.misses} Acc: $accuracy"
+    }
+
     fun colliderText(): String {
         if(!scene.jet.model.isInitialized) {
             return ""

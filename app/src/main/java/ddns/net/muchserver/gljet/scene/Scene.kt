@@ -15,7 +15,10 @@ import ddns.net.muchserver.gljet.entity.Cube
 import ddns.net.muchserver.gljet.jet.Bullet
 import ddns.net.muchserver.gljet.jet.Jet
 import ddns.net.muchserver.gljet.jet.speed
+import ddns.net.muchserver.gljet.obstacle.HEALTH_VORTEX_DEFAULT
 import ddns.net.muchserver.gljet.obstacle.Vortex
+import ddns.net.muchserver.gljet.obstacle.Vortex.Companion.randomizeX
+import ddns.net.muchserver.gljet.obstacle.Vortex.Companion.randomizeY
 import ddns.net.muchserver.gljet.render.GLRenderer
 import ddns.net.muchserver.gljet.sound.Sound
 import ddns.net.muchserver.gljet.time.GameLoop
@@ -32,41 +35,16 @@ import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.uuid.Uuid.Companion.random
 
-val positionsCube = arrayOf(
-    floatArrayOf(-4f, 0f, -18f),
-    floatArrayOf(4f, 0f, -18f),
-    floatArrayOf(-4f, 0f, -22f),
-    floatArrayOf(4f, 0f, -22f),
-    floatArrayOf(-4f, 4f, -28f),
-    floatArrayOf(4f, 0f, -28f),
-    floatArrayOf(-4f, 4f, -34f),
-    floatArrayOf(4f, -4f, -34f),
-    floatArrayOf(-4f, -4f, -40f),
-    floatArrayOf(4f, 6f, -40f),
-    floatArrayOf(-4f, -6f, -46f),
-    floatArrayOf(-4f, 4f, -58f),
-    floatArrayOf(4f, -4f, -66f),
-    floatArrayOf(-4f, -4f, -75f),
-    floatArrayOf(4f, 6f, -88f),
-    floatArrayOf(-4f, -6f, -98f),
-    floatArrayOf(-4f, 0f, -106f),
-    floatArrayOf(4f, 0f, -128f),
-    floatArrayOf(-4f, 0f, -122f),
-    floatArrayOf(4f, 0f, -122f),
-    floatArrayOf(-4f, 4f, -128f),
-    floatArrayOf(4f, 0f, -128f),
-    floatArrayOf(-4f, 4f, -134f),
-    floatArrayOf(4f, -4f, -134f),
-)
-
 const val MAX_VORTEX_COUNT = 9
-
-
 const val BULLET_MAX_COUNT = 13
 const val Z_MAX_SCENE = 5
 const val Z_SPAWN = -60f
+const val BULLET_MIN_Z = -105
+
 class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
     var score = 0
+    var hits = 0
+    var misses = 0
     val sound = Sound(context)
     val camera = Camera()
     lateinit var jet: Jet
@@ -99,12 +77,54 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
 
             for(bullet in bullets) {
                 bullet.update()
+                if(bullet.position[Z] < BULLET_MIN_Z) {
+                    if(bullet.isActive) {
+                        misses += 1
+                    }
+                    bullet.reset()
+                }
             }
 
             for(vortex in vortices) {
                 vortex.update()
-                resolveBulletsVortexCollision(vortex)
+                if(vortex.position[Z] > Z_MAX_SCENE) {
+                    if(vortex.isActive) {
+                        score -= 1
+                    }
+                    vortex.position[X] = randomizeX()
+                    vortex.position[Y] = randomizeY()
+                    vortex.position[Z] = Z_SPAWN
+                    vortex.isActive = true
+                    vortex.health = HEALTH_VORTEX_DEFAULT
+                }
+
                 resolveJetVortexCollision(vortex)
+                if(!vortex.isActive) {
+                    continue
+                }
+
+                for(bullet in bullets) {
+                    if(!bullet.isActive) {
+                        continue
+                    }
+
+                    if(CollisionManager.isCollision(bullet.collider, vortex.collider)) {
+                        bullet.reset()
+                        vortex.health -= 1
+                        hits += 1
+                        println("Vortex Health: ${vortex.health}")
+
+                        if(vortex.health < 1) {
+                            sound.playExplosion()
+                            score += 3
+                            vortex.isActive = false
+                        }
+                        break
+                    }
+
+                }
+
+
             }
     }
 
@@ -171,6 +191,8 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
             enableVortices()
             randomizeVorticesPosition()
             score = 0
+            hits = 0
+            misses = 0
         }
         else {
             jet.isUpdating = true
@@ -226,7 +248,7 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
 
     fun diableBullets() {
         for(bullet in bullets) {
-            bullet.isActive = false
+            bullet.reset()
         }
     }
 
@@ -268,14 +290,30 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
                 }
                 if(vortex.isActive) {
                     if(CollisionManager.isCollision(bullet.collider, vortex.collider)) {
-                        sound.playExplosion()
-                        score += 3
-                        bullet.isActive = false
-                        vortex.isActive = false
+                        bullet.reset()
+                        vortex.health -= 1
+                        hits += 1
+                        println("Vortex Health: ${vortex.health}")
+
+                        if(vortex.health < 1) {
+                            sound.playExplosion()
+                            score += 3
+                            vortex.isActive = false
+                        }
                         break
                     }
                 }
             }
         }
+    }
+
+    fun accuracy(): Float {
+        if(hits == 0) {
+            return 0.0f
+        }
+        val hitsFloat = hits.toFloat()
+        val missesFloat = misses.toFloat()
+        val sum = hitsFloat + missesFloat
+        return (hitsFloat / sum)
     }
 }
