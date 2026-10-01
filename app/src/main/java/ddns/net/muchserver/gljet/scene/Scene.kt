@@ -1,75 +1,53 @@
 package ddns.net.muchserver.gljet.scene
 
-import android.content.Context
-import android.media.MediaPlayer
-import ddns.net.muchserver.gljet.R
-import ddns.net.muchserver.gljet.camera.Camera
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import ddns.net.muchserver.gljet.camera.CameraFixed
 import ddns.net.muchserver.gljet.collider.CollisionManager
-import ddns.net.muchserver.gljet.collider.X_MAX
-import ddns.net.muchserver.gljet.collider.X_MIN
-import ddns.net.muchserver.gljet.collider.Y_MAX
-import ddns.net.muchserver.gljet.collider.Y_MIN
-import ddns.net.muchserver.gljet.collider.Z_MAX
-import ddns.net.muchserver.gljet.collider.Z_MIN
-import ddns.net.muchserver.gljet.entity.Cube
 import ddns.net.muchserver.gljet.jet.Bullet
 import ddns.net.muchserver.gljet.jet.Jet
-import ddns.net.muchserver.gljet.jet.speed
 import ddns.net.muchserver.gljet.obstacle.HEALTH_VORTEX_DEFAULT
 import ddns.net.muchserver.gljet.obstacle.Vortex
 import ddns.net.muchserver.gljet.obstacle.Vortex.Companion.randomizeX
 import ddns.net.muchserver.gljet.obstacle.Vortex.Companion.randomizeY
-import ddns.net.muchserver.gljet.render.GLRenderer
 import ddns.net.muchserver.gljet.sound.Sound
-import ddns.net.muchserver.gljet.time.GameLoop
 import ddns.net.muchserver.gljet.utility.X
 import ddns.net.muchserver.gljet.utility.Y
 import ddns.net.muchserver.gljet.utility.Z
-import ddns.net.muchserver.gljet.utility.loadRawResourceText
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import kotlin.collections.get
-import kotlin.random.Random
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.uuid.Uuid.Companion.random
 
 const val MAX_VORTEX_COUNT = 9
 const val BULLET_MAX_COUNT = 13
-const val Z_MAX_SCENE = 5
+const val Z_MAX_SCENE = 10
 const val Z_SPAWN = -60f
 const val BULLET_MIN_Z = -105
 
-class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
+class Scene(
+    val sceneView: SceneView,
+    val sound: Sound,
+    val jet: Jet,
+    val skyBox: SkyBox,
+    val vortices: ArrayList<Vortex>,
+    val bullets: ArrayList<Bullet>,
+    val vibrator: Vibrator? = null
+) {
     var score = 0
     var hits = 0
     var misses = 0
-    val sound = Sound(context)
-    val camera = Camera()
-    lateinit var jet: Jet
-    lateinit var skyBox: SkyBox
-    val vortices = ArrayList<Vortex>()
-    val bullets = ArrayList<Bullet>()
+    val camera = CameraFixed(sceneView)
+
     var isFiringBullets = false
 
+    val vibrationEffect: VibrationEffect? = VibrationEffect.createOneShot(300, VibrationEffect.DEFAULT_AMPLITUDE)
+    val fireEffect: VibrationEffect? = if(Build.VERSION.SDK_INT > Build.VERSION_CODES.R) VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+                                       else null
 
-    override fun initGL() {
-        jet = Jet(context)
-        jet.initGL()
-
-        skyBox = SkyBox(context)
-        skyBox.initGL()
-
-        vorticesInit()
-
-        bulletsInit()
-
-        setFollowRear()
-    }
-
-    override fun update() {
-            camera.position[Z] = camera.position[Z] - speed
+    fun update() {
             camera.updateViewMatrix()
 
             camera.update()
@@ -91,8 +69,8 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
                     if(vortex.isActive) {
                         score -= 1
                     }
-                    vortex.position[X] = randomizeX()
-                    vortex.position[Y] = randomizeY()
+                    vortex.position[X] = if(sceneView == SceneView.SIDE) 0f else randomizeX()
+                    vortex.position[Y] = if(sceneView == SceneView.TOP) 0f else randomizeY()
                     vortex.position[Z] = Z_SPAWN
                     vortex.isActive = true
                     vortex.health = HEALTH_VORTEX_DEFAULT
@@ -116,6 +94,10 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
 
                         if(vortex.health < 1) {
                             sound.playExplosion()
+                            if(vibrator != null && fireEffect != null) {
+                                vibrator.cancel()
+                                vibrator.vibrate(fireEffect)
+                            }
                             score += 3
                             vortex.isActive = false
                         }
@@ -128,7 +110,7 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
             }
     }
 
-    override fun draw(matrixView: FloatArray, matrixProjection: FloatArray) {
+    fun draw(matrixView: FloatArray, matrixProjection: FloatArray) {
         skyBox.draw(matrixView, matrixProjection)
 
         for(vortex in vortices) {
@@ -152,35 +134,43 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
     }
 
     fun moveLeft() {
-        jet.moveLeft()
+        if(sceneView == SceneView.SIDE) {
+            jet.moveBackward()
+        }
+        else {
+            jet.moveLeft()
+        }
     }
 
     fun moveRight() {
-        jet.moveRight()
+        if(sceneView == SceneView.SIDE) {
+            jet.moveForward()
+        }
+        else {
+            jet.moveRight()
+        }
     }
 
     fun moveUp() {
-        jet.moveUp()
+        if(sceneView == SceneView.TOP) {
+            jet.moveForward()
+        }
+        else {
+            jet.moveUp()
+        }
     }
 
     fun moveDown() {
-        jet.moveDown()
+        if(sceneView == SceneView.TOP) {
+            jet.moveBackward()
+        }
+        else {
+            jet.moveDown()
+        }
     }
 
     fun easeIntoIdle() {
         jet.easeIntoIdle()
-    }
-
-    fun setFollowRear() {
-        camera.setFollowRear(jet.position)
-    }
-
-    fun setFollowSide() {
-        camera.setFollowSide(jet.position)
-    }
-
-    fun setFollowTop() {
-        camera.setFollowTop(jet.position)
     }
 
     fun reset() {
@@ -198,17 +188,6 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
             jet.isUpdating = true
         }
     }
-
-    fun vorticesInit() {
-        for(i in 0 until MAX_VORTEX_COUNT) {
-            val position = floatArrayOf(0f, 0f, 0f)
-            val vortex = Vortex(context, position)
-            vortices.add(vortex)
-            vortex.initGL()
-        }
-        randomizeVorticesPosition()
-    }
-
     fun enableVortices() {
         for(vortex in vortices) {
             vortex.isActive = true
@@ -217,22 +196,14 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
 
     fun randomizeVorticesPosition() {
         val incFactor = -7.0f
+
         for(i in 0 until MAX_VORTEX_COUNT) {
-            vortices[i].position[X] = Vortex.randomizeX()
-            vortices[i].position[Y] = Vortex.randomizeY()
+            vortices[i].position[X] = if(sceneView == SceneView.SIDE) 0f else randomizeX()
+            vortices[i].position[Y] = if(sceneView == SceneView.TOP) 0f else randomizeY()
             vortices[i].position[Z] = Z_SPAWN + (i * incFactor)
         }
     }
 
-    fun bulletsInit() {
-        for(i in 0 until BULLET_MAX_COUNT) {
-            val position = floatArrayOf(0f, 0f, 0f)
-            val direction = floatArrayOf(0f, 0f, 1f)
-            val bullet = Bullet(context, position, direction)
-            bullet.initGL()
-            bullets.add(bullet)
-        }
-    }
     fun fire() {
         for(bullet in bullets) {
             if(!bullet.isActive) {
@@ -275,6 +246,10 @@ class Scene(val context: Context, val gameLoop: GameLoop): GLRenderer {
                 return@launch
             }
             if(CollisionManager.isCollision(jet.collider, vortex.collider)) {
+                if(vibrator != null) {
+                    vibrator.cancel()
+                    vibrator.vibrate(vibrationEffect)
+                }
                 sound.playCollision()
                 score -= 4
                 vortex.isActive = false

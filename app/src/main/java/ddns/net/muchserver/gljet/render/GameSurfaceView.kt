@@ -16,9 +16,8 @@ class GameSurfaceView(context: Context): GLSurfaceView(context) {
         renderManager = RenderManager(context, gameLoop)
         setRenderer(renderManager)
         renderMode = RENDERMODE_WHEN_DIRTY // RENDERMODE_CONTINUOUSLY
-
-
     }
+
 
     override fun onResume() {
         super.onResume()
@@ -88,10 +87,6 @@ class GameSurfaceView(context: Context): GLSurfaceView(context) {
 
     fun setFollowTop() {
         renderManager.setFollowTop()
-    }
-
-    fun reset() {
-        renderManager.reset()
     }
 
     fun toggleColliderRender() {

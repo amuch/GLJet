@@ -1,10 +1,8 @@
 package ddns.net.muchserver.gljet.render
 
 import android.content.Context
-import android.media.MediaPlayer
 import android.opengl.GLES32
 import android.opengl.GLSurfaceView
-import ddns.net.muchserver.gljet.R
 import ddns.net.muchserver.gljet.collider.CollisionManager
 import ddns.net.muchserver.gljet.collider.X_MAX
 import ddns.net.muchserver.gljet.collider.X_MIN
@@ -13,21 +11,22 @@ import ddns.net.muchserver.gljet.collider.Y_MIN
 import ddns.net.muchserver.gljet.collider.Z_MAX
 import ddns.net.muchserver.gljet.collider.Z_MIN
 import ddns.net.muchserver.gljet.scene.Scene
+import ddns.net.muchserver.gljet.scene.SceneManager
+import ddns.net.muchserver.gljet.scene.SceneView
 import ddns.net.muchserver.gljet.time.GameLoop
 import ddns.net.muchserver.gljet.utility.X
 import ddns.net.muchserver.gljet.utility.Y
 import ddns.net.muchserver.gljet.utility.Z
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
 class RenderManager(val context: Context, val gameLoop: GameLoop): GLSurfaceView.Renderer {
-    val scene: Scene
+    val sceneManager: SceneManager
+//    val scene: Scene
 
     init {
-        scene = Scene(context, gameLoop)
+        sceneManager = SceneManager(context, gameLoop)
+//        scene = sceneManager.scene!!
     }
 
     companion object {
@@ -43,14 +42,14 @@ class RenderManager(val context: Context, val gameLoop: GameLoop): GLSurfaceView
         GLES32.glEnable(GLES32.GL_CULL_FACE)
         GLES32.glCullFace(GLES32.GL_BACK)
 
-        scene.initGL()
+        sceneManager.initGL()
     }
 
     override fun onDrawFrame(gl: GL10?) {
         GLES32.glClear(GLES32.GL_COLOR_BUFFER_BIT or GLES32.GL_DEPTH_BUFFER_BIT)
 
-        scene.update()
-        scene.drawScene()
+        sceneManager.update()
+        sceneManager.drawScene()
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
@@ -59,79 +58,93 @@ class RenderManager(val context: Context, val gameLoop: GameLoop): GLSurfaceView
         heightScreen = height.toFloat()
         ratio = widthScreen / heightScreen
 
-        scene.updateSurface(width, height)
+        sceneManager.updateSurface(width, height)
     }
 
     fun moveLeft() {
-        scene.moveLeft()
+        sceneManager.scene!!.moveLeft()
     }
 
     fun moveRight() {
-        scene.moveRight()
+        sceneManager.scene!!.moveRight()
     }
 
     fun moveUp() {
-        scene.moveUp()
+        sceneManager.scene!!.moveUp()
     }
 
     fun moveDown() {
-        scene.moveDown()
+        sceneManager.scene!!.moveDown()
     }
 
     fun setIdle() {
-        scene.easeIntoIdle()
+        sceneManager.scene!!.easeIntoIdle()
     }
 
     fun fire() {
-        scene.fire()
+        sceneManager.scene!!.fire()
     }
 
     fun setFiring() {
-        scene.startFiring()
+        sceneManager.scene!!.startFiring()
     }
 
     fun unsetFiring() {
-        scene.isFiringBullets = false
+        sceneManager.scene!!.isFiringBullets = false
     }
 
     fun positionText(): String {
-        if(!scene.jet.model.isInitialized) {
+        if(!sceneManager.scene!!.jet.model.isInitialized) {
             return ""
         }
-        return "X: ${scene.jet.position[X]} Y: ${scene.jet.position[Y]} Z: ${scene.jet.position[Z]}"
+        return "X: ${sceneManager.scene!!.jet.position[X]} Y: ${sceneManager.scene!!.jet.position[Y]} Z: ${sceneManager.scene!!.jet.position[Z]}"
     }
 
     fun scoreText(): String {
-        return "Score ${scene.score}"
+        return "Score ${sceneManager.scene?.score}"
     }
 
     fun accuracyText(): String {
-        val accuracy = scene.accuracy()
-        return "Hit: ${scene.hits} Miss: ${scene.misses} Acc: $accuracy"
+        val accuracy = sceneManager.scene?.accuracy()
+        return "Hit: ${sceneManager.scene?.hits} Miss: ${sceneManager.scene?.misses} Acc: $accuracy"
     }
 
     fun colliderText(): String {
-        if(!scene.jet.model.isInitialized) {
+        if(!sceneManager.scene?.jet!!.model.isInitialized) {
             return ""
         }
-        val collider = CollisionManager.generateMaxMin(scene.jet.collider)
+        val collider = CollisionManager.generateMaxMin(sceneManager.scene?.jet!!.collider)
         return "X: ${collider[X_MIN]} - ${collider[X_MAX]} Y: ${collider[Y_MIN]} - ${collider[Y_MAX]} Z: ${collider[Z_MIN]} - ${collider[Z_MAX]}"
     }
 
     fun setFollowRear() {
-        scene.setFollowRear()
+        if(sceneManager.scene == null) {
+            return
+        }
+        sceneManager.resetScene(SceneView.REAR)
+        sceneManager.updateSurface(widthScreen.toInt(), heightScreen.toInt())
+        sceneManager.update()
+        sceneManager.drawScene()
     }
 
     fun setFollowSide() {
-        scene.setFollowSide()
+        if(sceneManager.scene == null) {
+            return
+        }
+        sceneManager.resetScene(SceneView.SIDE)
+        sceneManager.updateSurface(widthScreen.toInt(), heightScreen.toInt())
+        sceneManager.update()
+        sceneManager.drawScene()
     }
 
     fun setFollowTop() {
-        scene.setFollowTop()
-    }
-
-    fun reset() {
-        scene.reset()
+        if(sceneManager.scene == null) {
+            return
+        }
+        sceneManager.resetScene(SceneView.TOP)
+        sceneManager.updateSurface(widthScreen.toInt(), heightScreen.toInt())
+        sceneManager.update()
+        sceneManager.drawScene()
     }
 
     fun toggleColliderRender() {

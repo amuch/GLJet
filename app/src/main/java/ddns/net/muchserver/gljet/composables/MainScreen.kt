@@ -2,6 +2,10 @@ package ddns.net.muchserver.gljet.composables
 
 import android.app.Activity
 import android.content.pm.ActivityInfo
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
@@ -30,18 +34,23 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ddns.net.muchserver.gljet.render.GameSurfaceView
+import ddns.net.muchserver.gljet.viewmodel.ViewModelGameObjects
 import kotlinx.coroutines.delay
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun MainScreen(
-    modifier: Modifier
+    modifier: Modifier,
+    viewModelGameObjects: ViewModelGameObjects
 ) {
     var glView: GameSurfaceView? by remember { mutableStateOf(null) }
 //    val positionTextState = remember { mutableStateOf("X: 0.0, Y: 0.0 Z: 0.0") }
 //    val colliderTextState = remember { mutableStateOf("X: 0.0, Y: 0.0 Z: 0.0") }
     val scoreTextState = remember { mutableStateOf("") }
     val accuracyTextState = remember{ mutableStateOf("") }
+
+    val isMenuVisible = viewModelGameObjects.isMenuVisible.value ?: false
+    var shouldShowMenu by remember { mutableStateOf(isMenuVisible) }
 
     LockScreenOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE)
 
@@ -161,17 +170,8 @@ fun MainScreen(
                 modifier = Modifier.padding(5.dp),
                 text = "C",
                 onInteraction = { interaction ->
-                    when (interaction) {
+                    when(interaction) {
                         is PressInteraction.Press -> glView?.toggleColliderRender()
-                    }
-                }
-            )
-            ButtonOverlay(
-                modifier = Modifier.padding(5.dp),
-                text = "J",
-                onInteraction = { interaction ->
-                    when (interaction) {
-                        is PressInteraction.Press -> glView?.reset()
                     }
                 }
             )
@@ -228,6 +228,20 @@ fun MainScreen(
                     when(interaction) {
                         is PressInteraction.Press -> glView?.setFollowTop()
                     }
+                }
+            )
+        }
+        AnimatedVisibility(
+            modifier = Modifier.fillMaxSize(0.9f).align(Alignment.Center),
+            enter = expandVertically(animationSpec = tween(durationMillis = 300)),
+            exit = shrinkVertically(animationSpec = tween(durationMillis = 300)),
+            visible = shouldShowMenu
+        ) {
+            Menu(
+                modifier = Modifier.fillMaxSize().background(color = Color.White),
+                setIsMenuVisible = {
+                    shouldShowMenu = it
+                    viewModelGameObjects.setIsMenuVisible(it)
                 }
             )
         }

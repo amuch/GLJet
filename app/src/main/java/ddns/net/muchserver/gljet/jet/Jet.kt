@@ -11,7 +11,7 @@ import ddns.net.muchserver.gljet.utility.Z
 import ddns.net.muchserver.gljet.utility.loadRawResourceText
 
 val incRotation = 0.35f
-val incMovement = 0.2f
+val incMovement = 0.25f
 val Y_POSITION_MIN = -10f
 val Y_POSITION_MAX = 10f
 val Y_ROTATION_BASE = 0f
@@ -20,7 +20,9 @@ val X_POSITION_MIN = -15f
 val X_POSITION_MAX = 15f
 val X_ROTATION_BASE = 90f
 val X_ROTATION_MAX = 15f
-val speed = 0.05f
+
+val Z_POSITION_MIN = -15f
+val Z_POSITION_MAX = 0f
 
 
 val X_POSITION_INITIAL = 0f
@@ -109,6 +111,20 @@ class Jet(val context: Context) {
                     easeYRotation()
                 }
 
+                JetMovement.BACKWARD -> {
+                    if(position[Z] < Z_POSITION_MAX) {
+                        val z = position[Z] + incMovement
+                        position[Z] = z
+                    }
+                }
+
+                JetMovement.FORWARD -> {
+                    if(position[Z] > Z_POSITION_MIN) {
+                        val z = position[Z] - incMovement
+                        position[Z] = z
+                    }
+                }
+
                 else -> {
                     easeIntoIdle()
                 }
@@ -138,6 +154,14 @@ class Jet(val context: Context) {
 
     fun moveDown() {
         movement = JetMovement.DOWN
+    }
+
+    fun moveForward() {
+        movement = JetMovement.FORWARD
+    }
+
+    fun moveBackward() {
+        movement = JetMovement.BACKWARD
     }
 
     fun setIdle() {
