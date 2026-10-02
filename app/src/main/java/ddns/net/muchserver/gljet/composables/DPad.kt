@@ -28,11 +28,6 @@ fun DPad(
     modifier: Modifier,
     glView: GameSurfaceView?
 ) {
-    var width by remember { mutableIntStateOf(0) }
-    var height by remember { mutableIntStateOf(0) }
-    var positionTouch by remember { mutableStateOf(Offset.Unspecified) }
-    var direction by remember { mutableIntStateOf(0) }
-
     Canvas(
         modifier = modifier.then(
             Modifier.pointerInput(Unit) {
@@ -53,81 +48,11 @@ fun DPad(
             }
         )
     ) {
-
         drawCircle(
             color = Color(0x80507B9C),
             radius = size.width / 2.0f,
         )
     }
-
-
-//    Canvas(
-//        modifier = modifier.then(
-//            Modifier.onGloballyPositioned {
-//                width = it.size.width
-//                height = it.size.height
-//            }
-//                .pointerInteropFilter {
-//                    if(width == 0) {
-//                        return@pointerInteropFilter true
-//                    }
-//                    if(height == 0) {
-//                        return@pointerInteropFilter true
-//                    }
-//                    when(it.action) {
-//                        MotionEvent.ACTION_DOWN,
-//                        MotionEvent.ACTION_POINTER_DOWN,
-//                        MotionEvent.ACTION_MOVE -> {
-//                            if(it.y > height) {
-//                                glView?.setIdle()
-//                                return@pointerInteropFilter true
-//                            }
-//                            if(it.y < 0) {
-//                                glView?.setIdle()
-//                                return@pointerInteropFilter true
-//                            }
-//                            if(it.x > width) {
-//                                glView?.setIdle()
-//                                return@pointerInteropFilter true
-//                            }
-//                            if(it.x < 0) {
-//                                glView?.setIdle()
-//                                return@pointerInteropFilter true
-//                            }
-//
-//                            if(it.y < height / 3) {
-//                                glView?.moveUp()
-//                                return@pointerInteropFilter true
-//                            }
-//                            if(it.y > 2 * height / 3) {
-//                                glView?.moveDown()
-//                                return@pointerInteropFilter true
-//                            }
-//                            if(it.x < width / 3) {
-//                                glView?.moveLeft()
-//                                return@pointerInteropFilter true
-//                            }
-//                            if(it.x > 2 * width / 3) {
-//                                glView?.moveRight()
-//                                return@pointerInteropFilter true
-//                            }
-//                            glView?.setIdle()
-//                        }
-//                        else -> {
-//                            glView?.setIdle()
-//                        }
-//                    }
-//                    true
-//                }
-//
-//
-//        )
-//    ) {
-//        drawCircle(
-//            color = Color(0x80507B9C),
-//            radius = size.width / 2.0f,
-//        )
-//    }
 }
 
 fun calculateOffset(offsetTap: Offset, size: IntSize): Offset {
