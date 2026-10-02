@@ -101,64 +101,64 @@ fun MainScreen(
 //            fontSize = 20.sp
 //        )
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .fillMaxWidth(0.20f)
-                .fillMaxHeight(0.45f)
-                .offset(x = 30.dp)
-        ) {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                ButtonOverlay(
-                    modifier = Modifier.padding(5.dp),
-                    text = "^",
-                    onInteraction = { interaction ->
-                        when(interaction) {
-                            is PressInteraction.Press -> glView?.moveUp()
-                            is PressInteraction.Release -> glView?.setIdle()
-                            is PressInteraction.Cancel -> glView?.setIdle()
-                        }
-                    }
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                ButtonOverlay(
-                    modifier = Modifier.padding(5.dp),
-                    text = "<",
-                    onInteraction = { interaction ->
-                        when(interaction) {
-                            is PressInteraction.Press -> glView?.moveLeft()
-                            is PressInteraction.Release -> glView?.setIdle()
-                            is PressInteraction.Cancel -> glView?.setIdle()
-                        }
-                    }
-                )
-                ButtonOverlay(
-                    modifier = Modifier.padding(5.dp),
-                    text = ">",
-                    onInteraction = { interaction ->
-                        when(interaction) {
-                            is PressInteraction.Press -> glView?.moveRight()
-                            is PressInteraction.Release -> glView?.setIdle()
-                            is PressInteraction.Cancel -> glView?.setIdle()
-                        }
-                    }
-                )
-            }
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                ButtonOverlay(
-                    modifier = Modifier.padding(5.dp),
-                    text = "v",
-                    onInteraction = { interaction ->
-                        when(interaction) {
-                            is PressInteraction.Press -> glView?.moveDown()
-                            is PressInteraction.Release -> glView?.setIdle()
-                            is PressInteraction.Cancel -> glView?.setIdle()
-                        }
-                    }
-                )
-            }
-        }
+//        Column(
+//            modifier = Modifier
+//                .align(Alignment.BottomStart)
+//                .fillMaxWidth(0.20f)
+//                .fillMaxHeight(0.45f)
+//                .offset(x = 30.dp)
+//        ) {
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+//                ButtonOverlay(
+//                    modifier = Modifier.padding(5.dp),
+//                    text = "^",
+//                    onInteraction = { interaction ->
+//                        when(interaction) {
+//                            is PressInteraction.Press -> glView?.moveUp()
+//                            is PressInteraction.Release -> glView?.setIdle()
+//                            is PressInteraction.Cancel -> glView?.setIdle()
+//                        }
+//                    }
+//                )
+//            }
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+//                ButtonOverlay(
+//                    modifier = Modifier.padding(5.dp),
+//                    text = "<",
+//                    onInteraction = { interaction ->
+//                        when(interaction) {
+//                            is PressInteraction.Press -> glView?.moveLeft()
+//                            is PressInteraction.Release -> glView?.setIdle()
+//                            is PressInteraction.Cancel -> glView?.setIdle()
+//                        }
+//                    }
+//                )
+//                ButtonOverlay(
+//                    modifier = Modifier.padding(5.dp),
+//                    text = ">",
+//                    onInteraction = { interaction ->
+//                        when(interaction) {
+//                            is PressInteraction.Press -> glView?.moveRight()
+//                            is PressInteraction.Release -> glView?.setIdle()
+//                            is PressInteraction.Cancel -> glView?.setIdle()
+//                        }
+//                    }
+//                )
+//            }
+//            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+//                ButtonOverlay(
+//                    modifier = Modifier.padding(5.dp),
+//                    text = "v",
+//                    onInteraction = { interaction ->
+//                        when(interaction) {
+//                            is PressInteraction.Press -> glView?.moveDown()
+//                            is PressInteraction.Release -> glView?.setIdle()
+//                            is PressInteraction.Cancel -> glView?.setIdle()
+//                        }
+//                    }
+//                )
+//            }
+//        }
         Row(
             modifier = Modifier
                 .fillMaxWidth(0.25f)
@@ -245,6 +245,12 @@ fun MainScreen(
                 }
             )
         }
+
+        val modifierDPad = Modifier.width(130.dp).height(130.dp).align(Alignment.BottomStart).offset(x = 20.dp, y = (-20).dp)
+        DPad(
+            modifier = modifierDPad,
+            glView = glView
+        )
     }
 }
 
